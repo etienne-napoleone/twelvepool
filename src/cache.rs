@@ -28,7 +28,10 @@ impl Cache {
 
     pub fn set(&mut self, key: String, value: Tx) -> Option<Tx> {
         let stamped = (Instant::now(), value);
-        self.store.insert(key, stamped).map(|(_, v)| v)
+        self.store.insert(key.clone(), stamped).map(|(_, v)| {
+            log::debug!("inserted key {}", key);
+            v
+        })
     }
 
     pub fn get(&mut self, key: &str) -> Option<&Tx> {
@@ -45,18 +48,31 @@ impl Cache {
             }
         };
         match status {
-            Status::NotFound => None,
-            Status::Found => self.store.get(key).map(|stamped| &stamped.1),
+            Status::NotFound => {
+                log::debug!("key {} not found", key);
+                None
+            }
+            Status::Found => self.store.get(key).map(|stamped| {
+                log::debug!("key {} found", key);
+                &stamped.1
+            }),
             Status::Expired => {
                 self.store.remove(key).unwrap();
+                log::debug!("key {} has expired", key);
                 None
             }
         }
     }
 
     pub fn clear_expired(&mut self) {
+        let last_length = self.store.len();
         self.store
             .retain(|_, v| v.0.elapsed().as_secs() < self.ttl_seconds);
+        log::debug!(
+            "expired keys cleared ({} -> {})",
+            last_length,
+            self.store.len()
+        );
     }
 }
 

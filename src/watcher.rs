@@ -49,7 +49,7 @@ impl Watcher {
                                     None => match self.terra.decode_tx(&tx_string).await {
                                         Ok(tx) => match sender.send(tx.clone()) {
                                             Ok(_) => {
-                                                log::debug!("sent tx {}", hash);
+                                                log::info!("new tx {}", hash);
                                                 self.cache.set(hash, tx);
                                             }
                                             Err(err) => {

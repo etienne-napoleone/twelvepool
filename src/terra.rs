@@ -32,6 +32,7 @@ impl Terra {
             .await?
             .json::<responses::DecodeTxResponse>()
             .await?;
+        log::debug!("tx with {} msgs decoded", res.result.msg.len());
         Ok(res.result)
     }
 
@@ -43,7 +44,9 @@ impl Terra {
         let mut hasher = Sha256::new();
         hasher.update(decode(tx_string)?);
         let tx_bytes = hasher.finalize();
-        Ok(format!("{:X}", tx_bytes))
+        let hash = format!("{:X}", tx_bytes);
+        log::debug!("decoded tx hash {}", hash);
+        Ok(hash)
     }
 
     pub async fn get_unconfirmed_txs(&self) -> Result<Vec<String>, errors::RequestError> {
@@ -57,6 +60,7 @@ impl Terra {
             .await?
             .json::<responses::UnconfirmedTxsResponse>()
             .await?;
+        log::debug!("fetched {} unconfirmed txs", res.result.txs.len());
         Ok(res.result.txs)
     }
 }
