@@ -49,7 +49,10 @@ impl Terra {
     pub async fn get_unconfirmed_txs(&self) -> Result<Vec<String>, errors::RequestError> {
         let res = self
             .http_client
-            .get(format!("{}/txs/decode", self.rpc_url))
+            .get(format!(
+                "{}/unconfirmed_txs?limit=1000000000000",
+                self.rpc_url
+            ))
             .send()
             .await?
             .json::<responses::UnconfirmedTxsResponse>()
