@@ -6,12 +6,11 @@ use crate::terra::Terra;
 use crate::tx::Tx;
 
 use reqwest::Client;
-use tokio::sync::broadcast;
+use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
 use tokio::time::{sleep, Duration};
 use tokio_stream::{self as stream, StreamExt};
 
-const CHANNEL_CAPACITY: usize = 20;
 const INTERVAL: Duration = Duration::from_secs(2);
 
 #[derive(Debug)]
@@ -34,9 +33,10 @@ impl Watcher {
         }
     }
 
-    pub async fn receive(mut self) -> broadcast::Receiver<Tx> {
-        let (sender, receiver) = broadcast::channel(CHANNEL_CAPACITY);
+    pub async fn receive(mut self) -> mpsc::UnboundedReceiver<Tx> {
+        let (sender, receiver) = mpsc::unbounded_channel();
 
+        // babylon tower
         self.handles.push(tokio::spawn(async move {
             loop {
                 match self.terra.get_unconfirmed_txs().await {
