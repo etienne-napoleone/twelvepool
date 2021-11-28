@@ -64,34 +64,3 @@ impl Terra {
         Ok(res.result.txs)
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::Terra;
-    use tokio_test::block_on;
-
-    const TX_STR: &str = "Cp0BCo4BChwvY29zbW9zLmJhbmsudjFiZXRhMS5Nc2dTZW5kEm4KLHRlcnJhMXBqMmpwZ3l1Mmo4YW1nNXBkZnZqYzhkdjNnMHpkazcyaHpxZXdyEix0ZXJyYTE0bDQ2anJkZ2RoYXc0Y2VqdWt4NTBuZHAwaHNzOTVla3Qya2ZtdxoQCgV1bHVuYRIHMjEwOTk5NRIKMTg5NTQyMjk1MRJoClEKRgofL2Nvc21vcy5jcnlwdG8uc2VjcDI1NmsxLlB1YktleRIjCiEDmsiXXHtxyCbFAeeOfN7j4Ur4Z45hLi9zuNQ53j7mZ0ASBAoCCAEYiAgSEwoNCgV1bHVuYRIEMTA0ORDl0gUaQPT/oKGfhP5eHLYttAspV675WAshoWqPWe91x7VEy7/pWTmwmcsvxw4zYRrTO5Zh3mvaoO/MNOs/uJHhQLn2im0=";
-    const TX_HASH: &str = "B884E37E0FF71E9FC81ACE90A54E85A7F5644FCB9BF50BBB5BA52835222DA9D1";
-
-    #[test]
-    fn tx_hash_is_correctly_computed() {
-        let w = Terra::new(
-            "test".to_string(),
-            "test".to_string(),
-            reqwest::Client::new(),
-        );
-        block_on(async {
-            assert_eq!(w.get_tx_hash(&TX_STR.to_string()).await.unwrap(), TX_HASH);
-        });
-    }
-
-    #[test]
-    fn tx_str_is_correctly_decoded() {
-        let w = Terra::new(
-            "http://localhost:26657".to_string(),
-            "https://lcd.terra.dev".to_string(),
-            reqwest::Client::new(),
-        );
-        block_on(async { w.decode_tx(&TX_STR.to_string()).await.unwrap() });
-    }
-}
