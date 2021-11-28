@@ -1,9 +1,9 @@
 [package]
 name = "twelvepool"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Etienne Napoleone <etienne.napoleone@gmail.com>"]
 edition = "2021"
-description = "Watch for new txs in a terra node's mempool"
+description = "Watch for new txs in a Terra node mempool"
 documentation = "https://github.com/setten-io/twelvepool/blob/main/README.md"
 readme = "README.md"
 homepage = "https://github.com/setten-io/twelvepool"

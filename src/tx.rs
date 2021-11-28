@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -7,7 +5,7 @@ use serde_json::Value;
 pub struct Msg {
     #[serde(rename = "type")]
     pub type_: String,
-    pub value: HashMap<String, Value>,
+    pub value: Value,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
