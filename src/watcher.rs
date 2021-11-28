@@ -23,7 +23,7 @@ pub struct Watcher {
 impl Watcher {
     pub fn new(rpc_url: String, lcd_url: String, http_client: Option<Client>) -> Watcher {
         Watcher {
-            terra: Terra::new(rpc_url, lcd_url, http_client.unwrap_or(Client::new())),
+            terra: Terra::new(rpc_url, lcd_url, http_client.unwrap_or_default()),
             new_txs: vec![],
             cached_txs: HashMap::new(),
             cache: Cache::new(30),
@@ -39,7 +39,7 @@ impl Watcher {
                     Ok(tx_strings) => {
                         let mut raw_txs = self.get_tx_hashes(tx_strings).await;
                         raw_txs.retain(|tx_hash, _| {
-                            if self.cache.get(&tx_hash).is_none() {
+                            if self.cache.get(tx_hash).is_none() {
                                 true
                             } else {
                                 log::debug!("tx {} already sent", tx_hash);
@@ -86,10 +86,9 @@ impl Watcher {
             .await;
 
         items.into_iter().for_each(|item| {
-            if item.is_some() {
-                let (tx_hash, tx_string) = item.unwrap();
+            if let Some((tx_hash, tx_string)) = item {
                 raw_txs.insert(tx_hash, tx_string);
-            }
+            };
         });
 
         raw_txs
@@ -110,10 +109,9 @@ impl Watcher {
             .await;
 
         items.into_iter().for_each(|item| {
-            if item.is_some() {
-                let (tx_hash, tx) = item.unwrap();
+            if let Some((tx_hash, tx)) = item {
                 txs.insert(tx_hash, tx);
-            }
+            };
         });
 
         txs

@@ -23,7 +23,7 @@ impl Terra {
         }
     }
 
-    pub async fn decode_tx(&self, tx_string: &String) -> Result<Tx, errors::RequestError> {
+    pub async fn decode_tx(&self, tx_string: &str) -> Result<Tx, errors::RequestError> {
         let res = self
             .http_client
             .post(format!("{}/txs/decode", self.lcd_url))
@@ -36,10 +36,7 @@ impl Terra {
         Ok(res.result)
     }
 
-    pub async fn get_tx_hash(
-        &self,
-        tx_string: &String,
-    ) -> Result<String, errors::TxHashDecodeError> {
+    pub async fn get_tx_hash(&self, tx_string: &str) -> Result<String, errors::TxHashDecodeError> {
         // create a Sha256 object
         let mut hasher = Sha256::new();
         hasher.update(decode(tx_string)?);
