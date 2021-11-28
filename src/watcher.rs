@@ -38,8 +38,8 @@ impl Watcher {
                 match self.terra.get_unconfirmed_txs().await {
                     Ok(tx_strings) => {
                         let mut raw_txs = self.get_tx_hashes(tx_strings).await;
-                        raw_txs.retain(|tx_hash, tx_string| {
-                            if self.cache.get(&tx_string).is_none() {
+                        raw_txs.retain(|tx_hash, _| {
+                            if self.cache.get(&tx_hash).is_none() {
                                 true
                             } else {
                                 log::debug!("tx {} already sent", tx_hash);
@@ -49,13 +49,13 @@ impl Watcher {
 
                         let txs = self.get_decoded_txs(raw_txs).await;
                         txs.iter()
-                            .for_each(|(hash, tx)| match sender.send(tx.clone()) {
+                            .for_each(|(tx_hash, tx)| match sender.send(tx.clone()) {
                                 Ok(_) => {
-                                    log::info!("new tx {}", hash);
-                                    self.cache.set(hash.clone(), tx.clone());
+                                    log::info!("new tx {}", tx_hash);
+                                    self.cache.set(tx_hash.clone(), tx.clone());
                                 }
                                 Err(err) => {
-                                    log::error!("couldn't send tx {}: {}", hash, err)
+                                    log::error!("couldn't send tx {}: {}", tx_hash, err)
                                 }
                             });
                     }
@@ -74,8 +74,8 @@ impl Watcher {
 
         let items: Vec<Option<(String, String)>> = stream::iter(tx_strings)
             .map(|tx_string| async move {
-                if let Ok(hash) = self.terra.get_tx_hash(&tx_string).await {
-                    Some((hash, tx_string))
+                if let Ok(tx_hash) = self.terra.get_tx_hash(&tx_string).await {
+                    Some((tx_hash, tx_string))
                 } else {
                     None
                 }
@@ -86,8 +86,8 @@ impl Watcher {
 
         items.into_iter().for_each(|item| {
             if item.is_some() {
-                let (key, value) = item.unwrap();
-                raw_txs.insert(key, value);
+                let (tx_hash, tx_string) = item.unwrap();
+                raw_txs.insert(tx_hash, tx_string);
             }
         });
 
@@ -97,9 +97,9 @@ impl Watcher {
     async fn get_decoded_txs(&self, raw_txs: HashMap<String, String>) -> HashMap<String, Tx> {
         let mut txs: HashMap<String, Tx> = HashMap::new();
         let items: Vec<Option<(String, Tx)>> = stream::iter(raw_txs)
-            .map(|(hash, tx_string)| async move {
+            .map(|(tx_hash, tx_string)| async move {
                 if let Ok(tx) = self.terra.decode_tx(&tx_string).await {
-                    Some((hash, tx))
+                    Some((tx_hash, tx))
                 } else {
                     None
                 }
@@ -110,8 +110,8 @@ impl Watcher {
 
         items.into_iter().for_each(|item| {
             if item.is_some() {
-                let (key, value) = item.unwrap();
-                txs.insert(key, value);
+                let (tx_hash, tx) = item.unwrap();
+                txs.insert(tx_hash, tx);
             }
         });
 
