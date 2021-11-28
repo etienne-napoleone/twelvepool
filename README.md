@@ -13,11 +13,12 @@ async fn main() {
         String::from("http://localhost:26657"),
         String::from("http://localhost:1317"),
         None,
-    ).run().await;
+    )
+    .run();
 
     loop {
         if let Some(tx) = receiver.recv().await {
-            if  tx.memo == "my memo" {
+            if tx.memo == "my memo" {
                 println!("tx found");
             }
         }

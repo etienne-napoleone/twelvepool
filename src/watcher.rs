@@ -30,7 +30,7 @@ impl Watcher {
         }
     }
 
-    pub async fn run(mut self) -> mpsc::UnboundedReceiver<Tx> {
+    pub fn run(mut self) -> mpsc::UnboundedReceiver<Tx> {
         let (sender, receiver) = mpsc::unbounded_channel();
 
         tokio::spawn(async move {
