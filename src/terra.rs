@@ -45,7 +45,7 @@ impl Terra {
         hasher.update(decode(tx_string)?);
         let tx_bytes = hasher.finalize();
         let hash = format!("{:X}", tx_bytes);
-        log::debug!("decoded tx hash {}", hash);
+        log::debug!("got tx hash {} from tx_string", hash);
         Ok(hash)
     }
 

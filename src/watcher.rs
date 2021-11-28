@@ -5,20 +5,18 @@ use crate::cache::Cache;
 use crate::terra::Terra;
 use crate::tx::Tx;
 
+use futures::{stream, StreamExt};
 use reqwest::Client;
 use tokio::sync::mpsc;
-use tokio::task::JoinHandle;
 use tokio::time::{sleep, Duration};
-use tokio_stream::{self as stream, StreamExt};
 
-const INTERVAL: Duration = Duration::from_secs(2);
+const INTERVAL: Duration = Duration::from_secs(1);
 
 #[derive(Debug)]
 pub struct Watcher {
     terra: Terra,
     new_txs: Vec<Tx>,
     cached_txs: HashMap<String, Tx>,
-    handles: Vec<JoinHandle<()>>,
     cache: Cache,
 }
 
@@ -28,48 +26,95 @@ impl Watcher {
             terra: Terra::new(rpc_url, lcd_url, http_client.unwrap_or(Client::new())),
             new_txs: vec![],
             cached_txs: HashMap::new(),
-            handles: vec![],
             cache: Cache::new(30),
         }
     }
 
-    pub async fn receive(mut self) -> mpsc::UnboundedReceiver<Tx> {
+    pub async fn run(mut self) -> mpsc::UnboundedReceiver<Tx> {
         let (sender, receiver) = mpsc::unbounded_channel();
 
-        // babylon tower
-        self.handles.push(tokio::spawn(async move {
+        tokio::spawn(async move {
             loop {
                 match self.terra.get_unconfirmed_txs().await {
                     Ok(tx_strings) => {
-                        let mut stream = stream::iter(tx_strings);
-                        while let Some(tx_string) = stream.next().await {
-                            match self.terra.get_tx_hash(&tx_string).await {
-                                Ok(hash) => match self.cache.get(&hash) {
-                                    Some(_) => log::trace!("tx {} already sent", hash),
-                                    None => match self.terra.decode_tx(&tx_string).await {
-                                        Ok(tx) => match sender.send(tx.clone()) {
-                                            Ok(_) => {
-                                                log::info!("new tx {}", hash);
-                                                self.cache.set(hash, tx);
-                                            }
-                                            Err(err) => {
-                                                log::error!("couldn't send tx {}: {}", hash, err)
-                                            }
-                                        },
-                                        Err(err) => log::error!("could not decode tx: {}", err),
-                                    },
-                                },
-                                Err(err) => log::error!("couldn't decode tx hash: {}", err),
+                        let mut raw_txs = self.get_tx_hashes(tx_strings).await;
+                        raw_txs.retain(|tx_hash, tx_string| {
+                            if self.cache.get(&tx_string).is_none() {
+                                true
+                            } else {
+                                log::debug!("tx {} already sent", tx_hash);
+                                false
                             }
-                        }
+                        });
+
+                        let txs = self.get_decoded_txs(raw_txs).await;
+                        txs.iter()
+                            .for_each(|(hash, tx)| match sender.send(tx.clone()) {
+                                Ok(_) => {
+                                    log::info!("new tx {}", hash);
+                                    self.cache.set(hash.clone(), tx.clone());
+                                }
+                                Err(err) => {
+                                    log::error!("couldn't send tx {}: {}", hash, err)
+                                }
+                            });
                     }
-                    Err(err) => log::error!("couldn't get txs: {}", err),
+                    Err(err) => log::error!("couldn't get unconfirmed txs: {}", err),
                 }
                 self.cache.clear_expired();
                 sleep(INTERVAL).await;
             }
-        }));
+        });
 
         receiver
+    }
+
+    async fn get_tx_hashes(&self, tx_strings: Vec<String>) -> HashMap<String, String> {
+        let mut raw_txs: HashMap<String, String> = HashMap::new();
+
+        let items: Vec<Option<(String, String)>> = stream::iter(tx_strings)
+            .map(|tx_string| async move {
+                if let Ok(hash) = self.terra.get_tx_hash(&tx_string).await {
+                    Some((hash, tx_string))
+                } else {
+                    None
+                }
+            })
+            .buffer_unordered(usize::MAX)
+            .collect()
+            .await;
+
+        items.into_iter().for_each(|item| {
+            if item.is_some() {
+                let (key, value) = item.unwrap();
+                raw_txs.insert(key, value);
+            }
+        });
+
+        raw_txs
+    }
+
+    async fn get_decoded_txs(&self, raw_txs: HashMap<String, String>) -> HashMap<String, Tx> {
+        let mut txs: HashMap<String, Tx> = HashMap::new();
+        let items: Vec<Option<(String, Tx)>> = stream::iter(raw_txs)
+            .map(|(hash, tx_string)| async move {
+                if let Ok(tx) = self.terra.decode_tx(&tx_string).await {
+                    Some((hash, tx))
+                } else {
+                    None
+                }
+            })
+            .buffer_unordered(usize::MAX)
+            .collect()
+            .await;
+
+        items.into_iter().for_each(|item| {
+            if item.is_some() {
+                let (key, value) = item.unwrap();
+                txs.insert(key, value);
+            }
+        });
+
+        txs
     }
 }
