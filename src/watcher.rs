@@ -10,7 +10,7 @@ use reqwest::Client;
 use tokio::sync::mpsc;
 use tokio::time::{sleep, Duration};
 
-const INTERVAL: Duration = Duration::from_secs(1);
+const INTERVAL: Duration = Duration::from_millis(10);
 
 #[derive(Debug)]
 pub struct Watcher {
@@ -61,7 +61,8 @@ impl Watcher {
                     }
                     Err(err) => log::error!("couldn't get unconfirmed txs: {}", err),
                 }
-                self.cache.clear_expired();
+                let cleaned = self.cache.clear_expired();
+                log::debug!("cleaned {} tx from cache", cleaned);
                 sleep(INTERVAL).await;
             }
         });

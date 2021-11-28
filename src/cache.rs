@@ -28,16 +28,16 @@ impl Cache {
 
     pub fn set(&mut self, key: String, value: Tx) -> Option<Tx> {
         let stamped = (Instant::now(), value);
-        self.store.insert(key.clone(), stamped).map(|(_, v)| {
-            log::debug!("inserted key {}", key);
-            v
+        self.store.insert(key.clone(), stamped).map(|(_, tx)| {
+            log::trace!("inserted key {}", key);
+            tx
         })
     }
 
     pub fn get(&mut self, key: &str) -> Option<&Tx> {
         let status = {
-            let mut val = self.store.get_mut(key);
-            if let Some(&mut (instant, _)) = val.as_mut() {
+            let mut stamped = self.store.get_mut(key);
+            if let Some(&mut (instant, _)) = stamped.as_mut() {
                 if instant.elapsed().as_secs() < self.ttl_seconds {
                     Status::Found
                 } else {
@@ -49,30 +49,28 @@ impl Cache {
         };
         match status {
             Status::NotFound => {
-                log::debug!("key {} not found", key);
+                log::trace!("key {} not found", key);
                 None
             }
             Status::Found => self.store.get(key).map(|stamped| {
-                log::debug!("key {} found", key);
+                log::trace!("key {} found", key);
                 &stamped.1
             }),
             Status::Expired => {
                 self.store.remove(key).unwrap();
-                log::debug!("key {} has expired", key);
+                log::trace!("key {} has expired", key);
                 None
             }
         }
     }
 
-    pub fn clear_expired(&mut self) {
+    pub fn clear_expired(&mut self) -> usize {
         let last_length = self.store.len();
         self.store
-            .retain(|_, v| v.0.elapsed().as_secs() < self.ttl_seconds);
-        log::debug!(
-            "expired keys cleared ({} -> {})",
-            last_length,
-            self.store.len()
-        );
+            .retain(|_, tx| tx.0.elapsed().as_secs() < self.ttl_seconds);
+        let new_length = self.store.len();
+        log::trace!("expired keys cleared ({} -> {})", last_length, new_length);
+        last_length - new_length
     }
 }
 
