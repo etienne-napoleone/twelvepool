@@ -1,6 +1,6 @@
 # twelvepool
 
-Watch for new txs in the mempool.
+Watch for new txs in mempool.
 
 ## Example
 
