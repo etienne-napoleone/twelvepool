@@ -1,7 +1,16 @@
 [package]
 name = "twelvepool"
 version = "0.1.0"
+authors = ["Etienne Napoleone <etienne.napoleone@gmail.com>"]
 edition = "2021"
+description = "Watch for new txs in a terra node's mempool"
+documentation = "https://github.com/setten-io/twelvepool/blob/main/README.md"
+readme = "README.md"
+homepage = "https://github.com/setten-io/twelvepool"
+repository = "https://github.com/setten-io/twelvepool"
+license = "GPL-3.0-or-later"
+keywords = ["blockchain", "terra", "mempool", "cosmos", "tendermint"]
+categories = ["asynchronous", "cryptography::cryptocurrencies"]
 
 [dependencies]
 maplit = "1.0"
