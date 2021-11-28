@@ -1,6 +1,6 @@
 # twelvepool
 
-Watch for new txs in mempool.
+Watch for new txs in a Terra node mempool.
 
 ## Example
 
