@@ -76,12 +76,11 @@ impl Cache {
 
 #[cfg(test)]
 mod tests {
+    use std::thread::sleep;
+    use std::time::{Duration, Instant};
+
     use super::Cache;
     use crate::tx::{Fee, Tx};
-    use std::{
-        thread::sleep,
-        time::{Duration, Instant},
-    };
 
     const MOCKED_TX: Tx = Tx {
         msg: vec![],

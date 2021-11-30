@@ -1,14 +1,14 @@
 use std::collections::HashMap;
 use std::vec;
 
-use crate::cache::Cache;
-use crate::terra::Terra;
-use crate::tx::Tx;
-
 use futures::{stream, StreamExt};
 use reqwest::Client;
 use tokio::sync::mpsc;
 use tokio::time;
+
+use crate::cache::Cache;
+use crate::terra::Terra;
+use crate::tx::Tx;
 
 #[derive(Debug)]
 pub struct Watcher {

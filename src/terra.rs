@@ -1,11 +1,10 @@
-use crate::errors;
-use crate::responses;
-use crate::tx::Tx;
-
 use base64::decode;
 use maplit::hashmap;
 use reqwest::Client;
 use sha2::{Digest, Sha256};
+
+use crate::tx::Tx;
+use crate::{errors, responses};
 
 #[derive(Debug)]
 pub struct Terra {

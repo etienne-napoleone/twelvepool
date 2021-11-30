@@ -1,6 +1,6 @@
-use crate::tx::Tx;
-
 use serde::{Deserialize, Serialize};
+
+use crate::tx::Tx;
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct Result {
