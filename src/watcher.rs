@@ -8,9 +8,7 @@ use crate::tx::Tx;
 use futures::{stream, StreamExt};
 use reqwest::Client;
 use tokio::sync::mpsc;
-use tokio::time::{sleep, Duration};
-
-const INTERVAL: Duration = Duration::from_millis(10);
+use tokio::time;
 
 #[derive(Debug)]
 pub struct Watcher {
@@ -18,15 +16,22 @@ pub struct Watcher {
     new_txs: Vec<Tx>,
     cached_txs: HashMap<String, Tx>,
     cache: Cache,
+    interval: time::Interval,
 }
 
 impl Watcher {
-    pub fn new(rpc_url: String, lcd_url: String, http_client: Option<Client>) -> Watcher {
+    pub fn new(
+        rpc_url: String,
+        lcd_url: String,
+        http_client: Option<Client>,
+        interval_duration: Option<time::Duration>,
+    ) -> Watcher {
         Watcher {
             terra: Terra::new(rpc_url, lcd_url, http_client.unwrap_or_default()),
             new_txs: vec![],
             cached_txs: HashMap::new(),
             cache: Cache::new(30),
+            interval: time::interval(interval_duration.unwrap_or(time::Duration::from_millis(100))),
         }
     }
 
@@ -63,7 +68,7 @@ impl Watcher {
                 }
                 let cleaned = self.cache.clear_expired();
                 log::debug!("cleaned {} tx from cache", cleaned);
-                sleep(INTERVAL).await;
+                self.interval.tick().await;
             }
         });
 

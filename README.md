@@ -10,9 +10,10 @@ use twelvepool::Watcher;
 #[tokio::main]
 async fn main() {
     let mut receiver = Watcher::new(
-        String::from("http://localhost:26657"),
-        String::from("http://localhost:1317"),
-        None,
+        String::from("http://localhost:26657"),  // RPC address
+        String::from("http://localhost:1317"),   // LCD address
+        None,                                    // Optional reqwest client
+        None,                                    // Optional interval duration (default to 100ms)
     )
     .run();
 
