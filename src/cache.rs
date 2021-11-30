@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::time::Instant;
 
-use crate::Tx;
+use crate::tx::Tx;
 
 type StampedValue = (Instant, Tx);
 
