@@ -31,7 +31,9 @@ impl Watcher {
             new_txs: vec![],
             cached_txs: HashMap::new(),
             cache: Cache::new(30),
-            interval: time::interval(interval_duration.unwrap_or(time::Duration::from_millis(100))),
+            interval: time::interval(
+                interval_duration.unwrap_or_else(|| time::Duration::from_millis(100)),
+            ),
         }
     }
 
