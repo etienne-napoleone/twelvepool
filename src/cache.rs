@@ -84,7 +84,10 @@ mod tests {
 
     const MOCKED_TX: Tx = Tx {
         msg: vec![],
-        fee: Fee {},
+        fee: Fee {
+            amount: vec![],
+            gas: String::new(),
+        },
         signatures: vec![],
         memo: String::new(),
         timeout_height: String::new(),
