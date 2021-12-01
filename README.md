@@ -18,9 +18,9 @@ async fn main() {
     .run();
 
     loop {
-        if let Some(tx) = receiver.recv().await {
-            if tx.memo == "my memo" {
-                println!("tx found");
+        if let Some(mempool_item) = receiver.recv().await {
+            if mempool_item.tx.memo == "my memo" {
+                println!("tx with our memo found (tx hash {})", mempool_item.tx_hash);
             }
         }
     }

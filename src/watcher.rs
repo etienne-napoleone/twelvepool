@@ -7,6 +7,7 @@ use tokio::sync::mpsc;
 use tokio::time;
 
 use crate::cache::Cache;
+use crate::mempoolitem::MempoolItem;
 use crate::terra::Terra;
 use crate::tx::Tx;
 
@@ -37,7 +38,7 @@ impl Watcher {
         }
     }
 
-    pub fn run(mut self) -> mpsc::UnboundedReceiver<Tx> {
+    pub fn run(mut self) -> mpsc::UnboundedReceiver<MempoolItem> {
         let (sender, receiver) = mpsc::unbounded_channel();
 
         tokio::spawn(async move {
@@ -55,8 +56,8 @@ impl Watcher {
                         });
 
                         let txs = self.get_decoded_txs(raw_txs).await;
-                        txs.iter()
-                            .for_each(|(tx_hash, tx)| match sender.send(tx.clone()) {
+                        txs.iter().for_each(|(tx_hash, tx)| {
+                            match sender.send(MempoolItem::new(tx.clone(), tx_hash.clone())) {
                                 Ok(_) => {
                                     log::info!("new tx {}", tx_hash);
                                     self.cache.set(tx_hash.clone(), tx.clone());
@@ -64,7 +65,8 @@ impl Watcher {
                                 Err(err) => {
                                     log::error!("couldn't send tx {}: {}", tx_hash, err)
                                 }
-                            });
+                            }
+                        });
                     }
                     Err(err) => log::error!("couldn't get unconfirmed txs: {}", err),
                 }
