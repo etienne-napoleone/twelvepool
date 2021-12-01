@@ -88,7 +88,7 @@ impl Watcher {
                     None
                 }
             })
-            .buffer_unordered(usize::MAX)
+            .buffered(usize::MAX)
             .collect()
             .await;
 
@@ -111,7 +111,7 @@ impl Watcher {
                     None
                 }
             })
-            .buffer_unordered(usize::MAX)
+            .buffered(usize::MAX)
             .collect()
             .await;
 
