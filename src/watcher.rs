@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::vec;
 
 use futures::{stream, StreamExt};
 use reqwest::Client;
@@ -14,8 +13,6 @@ use crate::tx::Tx;
 #[derive(Debug)]
 pub struct Watcher {
     terra: Terra,
-    new_txs: Vec<Tx>,
-    cached_txs: HashMap<String, Tx>,
     cache: Cache,
     interval: time::Interval,
 }
@@ -29,8 +26,6 @@ impl Watcher {
     ) -> Watcher {
         Watcher {
             terra: Terra::new(rpc_url, lcd_url, http_client.unwrap_or_default()),
-            new_txs: vec![],
-            cached_txs: HashMap::new(),
             cache: Cache::new(30),
             interval: time::interval(
                 interval_duration.unwrap_or_else(|| time::Duration::from_millis(100)),
